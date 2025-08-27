@@ -55,14 +55,20 @@ class TelegramWebhook:
             await message.reply(f"Filename format set to: {format_string}")
             logger.info(f"Set format for chat ID {message.chat.id}: {format_string}")
 
-        # FIXED: replaced filters.mime_type() with filters.document.mime_type()
-        @self.client.on_message(filters.document.mime_type("application/pdf"))
+        @self.client.on_message(filters.document)
         async def handle_pdf(client, message: Message):
-            file = await message.download(in_memory=True)
-            pdf_data = file.read()
-            self.bot_instance.pdf_queue.put((message, pdf_data, message.document.file_name))
-            await message.reply(f"PDF {message.document.file_name} added to queue. Use /rename to process.")
-            logger.info(f"Received PDF: {message.document.file_name} from chat ID {message.chat.id}")
+            if not message.document:
+                return  # Ignore messages without documents
+
+            if message.document.mime_type == "application/pdf":
+                file = await message.download(in_memory=True)
+                pdf_data = file.read()
+                self.bot_instance.pdf_queue.put((message, pdf_data, message.document.file_name))
+                await message.reply(f"PDF {message.document.file_name} added to queue. Use /rename to process.")
+                logger.info(f"Received PDF: {message.document.file_name} from chat ID {message.chat.id}")
+            else:
+                await message.reply("Only PDF files are supported.")
+                logger.info(f"Rejected non-PDF file from chat ID {message.chat.id}: {message.document.file_name}")
 
         @self.client.on_message(filters.command("rename"))
         async def rename(client, message: Message):
