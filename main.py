@@ -107,7 +107,7 @@ async def webhook(request: Request):
 @app.on_event("startup")
 async def startup():
     """Set Telegram webhook on startup."""
-    webhook_url = f"https://your-render-url.com{Config.WEBHOOK_PATH}"  # Replace with your Render URL
+    webhook_url = f"https://manga-u8wx.onrender.com{Config.WEBHOOK_PATH}"  # Replace with your Render URL
     await webhook.start()
     await webhook.client.set_webhook(webhook_url)
     logger.info(f"Webhook set to {webhook_url}")
