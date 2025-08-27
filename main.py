@@ -2,6 +2,8 @@
 # FastAPI entry point for Telegram webhook using Pyrofork
 
 import logging
+import os
+import io
 from fastapi import FastAPI, Request
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -53,7 +55,8 @@ class TelegramWebhook:
             await message.reply(f"Filename format set to: {format_string}")
             logger.info(f"Set format for chat ID {message.chat.id}: {format_string}")
 
-        @self.client.on_message(filters.document & filters.mime_type("application/pdf"))
+        # FIXED: replaced filters.mime_type() with filters.document.mime_type()
+        @self.client.on_message(filters.document.mime_type("application/pdf"))
         async def handle_pdf(client, message: Message):
             file = await message.download(in_memory=True)
             pdf_data = file.read()
@@ -98,7 +101,7 @@ class TelegramWebhook:
 webhook = TelegramWebhook()
 
 @app.post(Config.WEBHOOK_PATH)
-async def webhook(request: Request):
+async def webhook_endpoint(request: Request):
     """Webhook endpoint for Telegram updates."""
     update_json = await request.json()
     await webhook.webhook_update(update_json)
